@@ -30,17 +30,25 @@ remote_file 'amazon-ssm-agent' do
   mode 0644
 end
 
+# Figure out the package provider
+package_provider = value_for_platform_family(
+  'rhel' => Chef::Provider::Package::Yum,
+  'suse' => Chef::Provider::Package::Zypper,
+  'amazon' => Chef::Provider::Package::Yum,
+  'debian' => Chef::Provider::Package::Dpkg,
+  'windows' => Chef::Provider::Package::Windows
+)
+
+# RHEL/CentOS 8 use DNF by default
+if defined?(Chef::Provider::Package::Dnf) && platform_family?('rhel') && node['platform_version'].to_i >= 8
+  package_provider = Chef::Provider::Package::Dnf
+end
+
 # Install the package
 # @since 0.1.0
 package 'amazon-ssm-agent' do # ~FC109
   source node['ssm_agent']['package']['path']
-  provider value_for_platform_family(
-    'rhel' => Chef::Provider::Package::Yum,
-    'suse' => Chef::Provider::Package::Zypper,
-    'amazon' => Chef::Provider::Package::Yum,
-    'debian' => Chef::Provider::Package::Dpkg,
-    'windows' => Chef::Provider::Package::Windows
-  )
+  provider package_provider
   action :upgrade
 end
 
