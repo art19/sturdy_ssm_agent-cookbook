@@ -31,9 +31,8 @@ remote_file 'amazon-ssm-agent' do
 end
 
 # Figure out the package provider
-use_dnf = defined?(Chef::Provider::Package::Dnf) && node['platform_version'].to_i >= 8
 package_provider = value_for_platform_family(
-  'rhel' => use_dnf ? Chef::Provider::Package::Dnf : Chef::Provider::Package::Yum,
+  'rhel' => node['platform_version'].to_i >= 8 ? Chef::Provider::Package::Dnf : Chef::Provider::Package::Yum,
   'suse' => Chef::Provider::Package::Zypper,
   'amazon' => Chef::Provider::Package::Yum,
   'debian' => Chef::Provider::Package::Dpkg,
